@@ -1,0 +1,63 @@
+﻿@using TreeLibrary
+@using System.Text
+
+<svg width="1000" height="600" style="border:1px solid #ccc">
+    @if (Root != null)
+    {
+        @DrawNode(Root, 500, 30, 250)
+    }
+</svg>
+
+@code {
+    [Parameter] public BTreeNode<string> Root { get; set; }
+
+    private RenderFragment DrawNode(BTreeNode<string> node, double x, double y, double xSpacing)
+    {
+        // Move this outside the lambda
+        bool isLeaf = node is LeafNode<string>;
+        string label = isLeaf
+            ? string.Join(",", ((LeafNode<string>)node).Leaves.Select(l => l.Id))
+            : string.Join(",", ((InternalNode<string>)node).Keys);
+
+        return builder =>
+        {
+            int seq = 0;
+
+            // Draw node label
+            builder.OpenElement(seq++, "text");
+            builder.AddAttribute(seq++, "x", x);
+            builder.AddAttribute(seq++, "y", y);
+            builder.AddAttribute(seq++, "text-anchor", "middle");
+            builder.AddAttribute(seq++, "font-family", "monospace");
+            builder.AddContent(seq++, label);
+            builder.CloseElement();
+
+            // Draw child connections if internal node
+            if (!isLeaf)
+            {
+                var internalNode = (InternalNode<string>)node;
+                double childY = y + 60;
+                int childCount = internalNode.Children.Count;
+                double totalWidth = xSpacing * (childCount - 1);
+                double startX = x - totalWidth / 2;
+
+                for (int i = 0; i < childCount; i++)
+                {
+                    double childX = startX + i * xSpacing;
+
+                    // draw line to child
+                    builder.OpenElement(seq++, "line");
+                    builder.AddAttribute(seq++, "x1", x);
+                    builder.AddAttribute(seq++, "y1", y + 5);
+                    builder.AddAttribute(seq++, "x2", childX);
+                    builder.AddAttribute(seq++, "y2", childY - 15);
+                    builder.AddAttribute(seq++, "stroke", "black");
+                    builder.CloseElement();
+
+                    // draw child recursively
+                    builder.AddContent(seq++, DrawNode(internalNode.Children[i], childX, childY, xSpacing / 2));
+                }
+            }
+        };
+    }
+}

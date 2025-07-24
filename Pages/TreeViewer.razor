@@ -1,0 +1,36 @@
+﻿@page "/tree"
+@using TreeLibrary
+@using System
+
+<h3>B+ Tree Visualization</h3>
+
+<div class="mb-3">
+    <label for="itemCountInput">Number of Items:</label>
+    <input id="itemCountInput" type="number" min="1" @bind="ItemCount" class="form-control" style="width: 200px;" />
+    <button class="btn btn-primary mt-2" @onclick="GenerateTree">Generate Tree</button>
+</div>
+
+@if (BTree?.Root != null)
+{
+    <TreeNodeComponent Root="@BTree.Root" />
+}
+
+@code {
+    public BTreeService<string> BTree { get; set; }
+    public int ItemCount { get; set; } = 10; // default value
+
+    protected override void OnInitialized()
+    {
+        GenerateTree();
+    }
+
+    private void GenerateTree()
+    {
+        BTree = new BTreeService<string>(3); // Adjust degree as needed
+
+        for (int i = 1; i <= ItemCount; i++)
+        {
+            BTree.Add($"Value {i}");
+        }
+    }
+}
